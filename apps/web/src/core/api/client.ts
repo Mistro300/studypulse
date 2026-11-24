@@ -6,6 +6,7 @@ import {
 } from '@studypulse/shared';
 import type { ZodType, ZodTypeDef } from 'zod';
 import { useRateLimitStore } from '@/core/api/rate-limit-store';
+import { isStandaloneMode } from '@/core/standalone/standalone-api';
 
 const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '';
 
@@ -96,6 +97,20 @@ async function parseErrorResponse(res: Response): Promise<NormalizedAppError> {
  * Strictly separates network offline errors (throws NETWORK_OFFLINE) from server HTTP 401 (returns null).
  */
 export async function performSilentRefresh(): Promise<AuthSessionResponse | null> {
+  if (isStandaloneMode()) {
+    try {
+      const { handleStandaloneApiRequest } = await import('@/core/standalone/standalone-api');
+      const raw = await handleStandaloneApiRequest('/api/auth/refresh', 'POST');
+      const session = AuthSessionResponseSchema.parse(raw);
+      inMemoryAccessToken = session.accessToken;
+      notifyTokenRefreshed(session);
+      return session;
+    } catch {
+      inMemoryAccessToken = null;
+      return null;
+    }
+  }
+
   if (refreshInFlight) return refreshInFlight;
 
   refreshInFlight = (async () => {
@@ -148,6 +163,22 @@ export async function apiRequest<T>(
   options: ApiRequestOptions<T> = {},
 ): Promise<T> {
   const { method = 'GET', body, schema, signal, skipAuthRefresh = false } = options;
+
+  if (isStandaloneMode()) {
+    try {
+      const { handleStandaloneApiRequest } = await import('@/core/standalone/standalone-api');
+      const raw = await handleStandaloneApiRequest(path, method, body);
+      return schema ? schema.parse(raw) : (raw as T);
+    } catch (err) {
+      const e = err as { statusCode?: number; code?: NormalizedAppError['code']; message?: string };
+      throw new ApiClientError({
+        code: e.code ?? 'INTERNAL_ERROR',
+        message: e.message ?? 'Request failed',
+        retryable: false,
+        statusCode: e.statusCode ?? 400,
+      });
+    }
+  }
 
   const execute = async (): Promise<Response> => {
     const headers: Record<string, string> = {};

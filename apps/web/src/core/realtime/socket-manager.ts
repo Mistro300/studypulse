@@ -15,6 +15,8 @@ import {
 } from '@studypulse/shared';
 import { z } from 'zod';
 import { getAccessToken, performSilentRefresh } from '@/core/api/client';
+import { isStandaloneMode } from '@/core/standalone/standalone-api';
+import { standaloneRealtime } from '@/core/standalone/standalone-room-engine';
 
 export type RealtimeConnectionStatus =
   | 'idle'
@@ -51,6 +53,7 @@ class RealtimeManager {
 
   bindCallbacks(callbacks: RealtimeCallbacks): void {
     this.callbacks = callbacks;
+    standaloneRealtime.bindCallbacks(callbacks);
   }
 
   private updateClockOffset(serverTimestampMs: number): void {
@@ -61,6 +64,11 @@ class RealtimeManager {
   async connectAndJoin(rawCode: string): Promise<void> {
     const code = rawCode.trim().toUpperCase();
     this.activeRoomCode = code;
+
+    if (isStandaloneMode()) {
+      standaloneRealtime.connectAndJoin(code);
+      return;
+    }
 
     let token = getAccessToken();
     if (!token) {
@@ -187,21 +195,37 @@ class RealtimeManager {
   }
 
   toggleReady(): void {
+    if (isStandaloneMode()) {
+      standaloneRealtime.toggleReady();
+      return;
+    }
     if (!this.activeRoomCode) return;
     this.socket?.emit('room:ready', { code: this.activeRoomCode });
   }
 
   updateBotsCount(count: number): void {
+    if (isStandaloneMode()) {
+      standaloneRealtime.updateBotsCount(count);
+      return;
+    }
     if (!this.activeRoomCode) return;
     this.socket?.emit('room:bots:update', { code: this.activeRoomCode, count });
   }
 
   startQuiz(): void {
+    if (isStandaloneMode()) {
+      standaloneRealtime.startQuiz();
+      return;
+    }
     if (!this.activeRoomCode) return;
     this.socket?.emit('room:start', { code: this.activeRoomCode });
   }
 
   submitAnswer(questionIndex: number, choiceId: string): void {
+    if (isStandaloneMode()) {
+      standaloneRealtime.submitAnswer(questionIndex, choiceId);
+      return;
+    }
     if (!this.activeRoomCode) return;
     this.socket?.emit('room:answer', {
       roomCode: this.activeRoomCode,
@@ -217,6 +241,11 @@ class RealtimeManager {
   }
 
   disconnect(clearRoom = true): void {
+    if (isStandaloneMode()) {
+      standaloneRealtime.disconnect();
+      if (clearRoom) this.activeRoomCode = null;
+      return;
+    }
     if (this.socket) {
       this.socket.removeAllListeners();
       this.socket.disconnect();
