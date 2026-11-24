@@ -1,0 +1,190 @@
+/* ============================================================================
+ * StudyPulse — Focus & Pulse Design System Semantic Tokens
+ * Strictly separates Light (Warm Stone) & Dark (Midnight Ink) surfaces.
+ * Exposes exact hex semantic tokens AND RGB channel tokens for Tailwind alpha
+ * modifiers (e.g. border-srs-again/40, bg-brand-primary/10).
+ * ============================================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* Brand — Electric Violet */
+  --brand-primary: #7c3aed;
+  --brand-primary-rgb: 124 58 237;
+  --brand-primary-hover: #6d28d9;
+  --brand-primary-hover-rgb: 109 40 217;
+  --brand-primary-soft: #f5f3ff;
+
+  /* Accent — Streak / Live Pulse / Last 5s Timer */
+  --accent-pulse: #f97316;
+  --accent-pulse-rgb: 249 115 22;
+  --accent-pulse-soft: rgba(249, 115, 22, 0.14);
+
+  /* Neutrals — Warm Stone (Light) */
+  --surface-base: #faf9f6;
+  --surface-base-rgb: 250 249 246;
+  --surface-elevated: #ffffff;
+  --surface-elevated-rgb: 255 255 255;
+  --surface-subtle: #f3f2ee;
+  --surface-subtle-rgb: 243 242 238;
+  --border-default: #e7e5e0;
+  --border-default-rgb: 231 229 224;
+  --text-primary: #1c1917;
+  --text-primary-rgb: 28 25 23;
+  --text-secondary: #57534e;
+  --text-secondary-rgb: 87 83 78;
+
+  /* Status & SRS 4-Button Spectrum */
+  --srs-again: #e11d48;
+  --srs-again-rgb: 225 29 72;
+  --srs-hard: #d97706;
+  --srs-hard-rgb: 217 119 6;
+  --srs-good: #059669;
+  --srs-good-rgb: 5 150 105;
+  --srs-easy: #0891b2;
+  --srs-easy-rgb: 8 145 178;
+
+  --status-danger: #e11d48;
+  --status-danger-rgb: 225 29 72;
+  --status-warning: #d97706;
+  --status-warning-rgb: 217 119 6;
+  --status-success: #059669;
+  --status-success-rgb: 5 150 105;
+  --status-info: #0891b2;
+  --status-info-rgb: 8 145 178;
+
+  /* Shape System */
+  --radius-card: 16px;
+  --radius-control: 12px;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Brand — Electric Violet (Dark) */
+  --brand-primary: #8b5cf6;
+  --brand-primary-rgb: 139 92 246;
+  --brand-primary-hover: #a78bfa;
+  --brand-primary-hover-rgb: 167 139 250;
+  --brand-primary-soft: rgba(139, 92, 246, 0.16);
+
+  /* Accent — Coral Pulse (Dark) */
+  --accent-pulse: #fb923c;
+  --accent-pulse-rgb: 251 146 60;
+  --accent-pulse-soft: rgba(251, 146, 60, 0.16);
+
+  /* Neutrals — Midnight Ink (Dark) */
+  --surface-base: #0d0c12;
+  --surface-base-rgb: 13 12 18;
+  --surface-elevated: #16141f;
+  --surface-elevated-rgb: 22 20 31;
+  --surface-subtle: #211e2e;
+  --surface-subtle-rgb: 33 30 46;
+  --border-default: #2e2a3f;
+  --border-default-rgb: 46 42 63;
+  --text-primary: #f5f5f4;
+  --text-primary-rgb: 245 245 244;
+  --text-secondary: #a8a29e;
+  --text-secondary-rgb: 168 162 158;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: var(--surface-base);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html[lang='ar'] body {
+    font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  }
+
+  html[lang='en'] body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  html[lang='en'] h1,
+  html[lang='en'] h2,
+  html[lang='en'] h3,
+  html[lang='en'] h4 {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .sp-card {
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+  }
+
+  .sp-tactile-control {
+    border: 1px solid var(--border-default);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-control);
+  }
+
+  .sp-mono-numeric {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  .pb-safe {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  /* 3D Flip Card — respects prefers-reduced-motion */
+  .sp-flip-scene {
+    perspective: 1200px;
+  }
+
+  .sp-flip-card {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .sp-flip-card[data-flipped='true'] {
+    transform: rotateY(180deg);
+  }
+
+  .sp-flip-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .sp-flip-back {
+    transform: rotateY(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sp-flip-card {
+      transition: opacity 0.15s ease;
+      transform-style: flat;
+    }
+    .sp-flip-card[data-flipped='true'] {
+      transform: none;
+    }
+    .sp-flip-back {
+      transform: none;
+    }
+    .sp-flip-card[data-flipped='true'] .sp-flip-front {
+      display: none;
+    }
+    .sp-flip-card[data-flipped='false'] .sp-flip-back {
+      display: none;
+    }
+  }
+}

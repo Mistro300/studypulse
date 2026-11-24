@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#FAF9F6" id="sp-theme-color" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      name="description"
+      content="StudyPulse — Offline-first FSRS-5 smart study companion & live timed quiz rooms."
+    />
+    <title>StudyPulse</title>
+
+    <!-- Typography: IBM Plex Sans Arabic, Plus Jakarta Sans, Inter, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Zero-FOUC Theme & Direction Bootstrapper (runs synchronously before React mounts) -->
+    <script>
+      (function () {
+        try {
+          var THEME_KEY = 'studypulse.theme';
+          var LOCALE_KEY = 'studypulse.locale';
+          var LIGHT_BASE = '#FAF9F6';
+          var DARK_BASE = '#0D0C12';
+
+          var savedTheme = localStorage.getItem(THEME_KEY) || 'system';
+          var prefersDark =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var resolvedTheme =
+            savedTheme === 'dark' || (savedTheme === 'system' && prefersDark) ? 'dark' : 'light';
+
+          var root = document.documentElement;
+          root.setAttribute('data-theme', resolvedTheme);
+          root.style.colorScheme = resolvedTheme;
+
+          var metaTheme = document.getElementById('sp-theme-color');
+          if (metaTheme) {
+            metaTheme.setAttribute('content', resolvedTheme === 'dark' ? DARK_BASE : LIGHT_BASE);
+          }
+
+          var savedLocale = localStorage.getItem(LOCALE_KEY) || 'ar';
+          var resolvedLocale = savedLocale === 'en' ? 'en' : 'ar';
+          root.setAttribute('lang', resolvedLocale);
+          root.setAttribute('dir', resolvedLocale === 'ar' ? 'rtl' : 'ltr');
+        } catch (_e) {
+          // Fallback safely to default light + RTL
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

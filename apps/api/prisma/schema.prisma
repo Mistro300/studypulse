@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Locale {
+  ar
+  en
+}
+
+enum ThemeMode {
+  system
+  light
+  dark
+}
+
+enum CardType {
+  FLASHCARD
+  MCQ
+}
+
+enum SrsState {
+  NEW
+  LEARNING
+  REVIEW
+  RELEARNING
+}
+
+enum SrsRating {
+  AGAIN
+  HARD
+  GOOD
+  EASY
+}
+
+enum LiveRoomStatus {
+  LOBBY
+  COUNTDOWN
+  QUESTION_ACTIVE
+  QUESTION_REVEAL
+  LEADERBOARD
+  FINISHED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique @db.VarChar(255)
+  passwordHash String?  @map("password_hash") @db.VarChar(255)
+  displayName  String   @map("display_name") @db.VarChar(80)
+  avatarUrl    String?  @map("avatar_url")
+  oauthProvider String? @map("oauth_provider") @db.VarChar(40)
+  oauthSubject  String? @map("oauth_subject") @db.VarChar(255)
+  streakDays   Int      @default(0) @map("streak_days")
+  lastStudyDate DateTime? @map("last_study_date") @db.Date
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  preferences         UserPreference?
+  refreshTokens       RefreshToken[]
+  decks               Deck[]
+  srsStates           CardSrsState[]
+  reviewEvents        ReviewEvent[]
+  hostedRooms         LiveRoom[]
+  roomParticipations  LiveRoomParticipant[]
+  pushSubscriptions   PushSubscription[]
+
+  @@unique([oauthProvider, oauthSubject])
+  @@map("users")
+}
+
+model RefreshToken {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  familyId      String    @map("family_id") @db.Uuid
+  tokenHash     String    @unique @map("token_hash") @db.VarChar(128)
+  userAgent     String?   @map("user_agent") @db.VarChar(255)
+  ipAddress     String?   @map("ip_address") @db.VarChar(64)
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt     DateTime? @map("revoked_at") @db.Timestamptz
+  replacedById  String?   @map("replaced_by_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, familyId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model UserPreference {
+  userId                  String    @id @map("user_id") @db.Uuid
+  theme                   ThemeMode @default(system)
+  locale                  Locale    @default(ar)
+  dailyGoal               Int       @default(20) @map("daily_goal")
+  interestsJson           Json      @default("[]") @map("interests_json")
+  pushRemindersEnabled    Boolean   @default(false) @map("push_reminders_enabled")
+  pushRoomInvitesEnabled  Boolean   @default(true) @map("push_room_invites_enabled")
+  reminderHourLocal       Int       @default(20) @map("reminder_hour_local")
+  updatedAt               DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Deck {
+  id          String   @id @default(uuid()) @db.Uuid
+  ownerId     String   @map("owner_id") @db.Uuid
+  title       String   @db.VarChar(120)
+  description String?  @db.VarChar(500)
+  topic       String   @db.VarChar(60)
+  language    Locale   @default(ar)
+  isPublic    Boolean  @default(false) @map("is_public")
+  sourceKind  String?  @map("source_kind") @db.VarChar(40)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  cards     Card[]
+  liveRooms LiveRoom[]
+
+  @@index([ownerId, updatedAt])
+  @@index([isPublic, topic])
+  @@map("decks")
+}
+
+model Card {
+  id              String   @id @default(uuid()) @db.Uuid
+  deckId          String   @map("deck_id") @db.Uuid
+  type            CardType @default(FLASHCARD)
+  front           String   @db.Text
+  back            String   @db.Text
+  explanation     String?  @db.Text
+  choicesJson     Json?    @map("choices_json")
+  correctChoiceId String?  @map("correct_choice_id") @db.VarChar(64)
+  tags            String[] @default([])
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  deck         Deck             @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  srsStates    CardSrsState[]
+  reviewEvents ReviewEvent[]
+  roomAnswers  LiveRoomAnswer[]
+
+  @@index([deckId, updatedAt])
+  @@map("cards")
+}
+
+model CardSrsState {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  cardId        String    @map("card_id") @db.Uuid
+  due           DateTime  @db.Timestamptz
+  stability     Float     @default(0)
+  difficulty    Float     @default(0)
+  elapsedDays   Int       @default(0) @map("elapsed_days")
+  scheduledDays Int       @default(0) @map("scheduled_days")
+  reps          Int       @default(0)
+  lapses        Int       @default(0)
+  state         SrsState  @default(NEW)
+  lastReview    DateTime? @map("last_review") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId, due])
+  @@map("card_srs_states")
+}
+
+model ReviewEvent {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  cardId              String    @map("card_id") @db.Uuid
+  idempotencyKey      String    @map("idempotency_key") @db.Uuid
+  rating              SrsRating
+  durationMs          Int       @map("duration_ms")
+  clientTimestamp     DateTime  @map("client_timestamp") @db.Timestamptz
+  effectiveTimestamp  DateTime  @map("effective_timestamp") @db.Timestamptz
+  wasTimestampClamped Boolean   @default(false) @map("was_timestamp_clamped")
+  serverReceivedAt    DateTime  @default(now()) @map("server_received_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, effectiveTimestamp])
+  @@index([cardId])
+  @@map("review_events")
+}
+
+model LiveRoom {
+  id                  String         @id @default(uuid()) @db.Uuid
+  code                String         @unique @db.VarChar(8)
+  title               String         @db.VarChar(100)
+  deckId              String         @map("deck_id") @db.Uuid
+  hostId              String         @map("host_id") @db.Uuid
+  status              LiveRoomStatus @default(LOBBY)
+  isPublic            Boolean        @default(true) @map("is_public")
+  maxParticipants     Int            @default(20) @map("max_participants")
+  questionDurationSec Int            @default(20) @map("question_duration_sec")
+  questionCount       Int            @default(10) @map("question_count")
+  startedAt           DateTime?      @map("started_at") @db.Timestamptz
+  finishedAt          DateTime?      @map("finished_at") @db.Timestamptz
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  deck         Deck                  @relation(fields: [deckId], references: [id], onDelete: Restrict)
+  host         User                  @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  participants LiveRoomParticipant[]
+  answers      LiveRoomAnswer[]
+
+  @@index([status, isPublic])
+  @@map("live_rooms")
+}
+
+model LiveRoomParticipant {
+  id          String    @id @default(uuid()) @db.Uuid
+  roomId      String    @map("room_id") @db.Uuid
+  userId      String?   @map("user_id") @db.Uuid
+  displayName String    @map("display_name") @db.VarChar(60)
+  isHost      Boolean   @default(false) @map("is_host")
+  isBot       Boolean   @default(false) @map("is_bot")
+  finalScore  Int       @default(0) @map("final_score")
+  finalRank   Int?      @map("final_rank")
+  joinedAt    DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  leftAt      DateTime? @map("left_at") @db.Timestamptz
+
+  room    LiveRoom         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user    User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  answers LiveRoomAnswer[]
+
+  @@index([roomId])
+  @@map("live_room_participants")
+}
+
+model LiveRoomAnswer {
+  id               String   @id @default(uuid()) @db.Uuid
+  roomId           String   @map("room_id") @db.Uuid
+  participantId    String   @map("participant_id") @db.Uuid
+  cardId           String   @map("card_id") @db.Uuid
+  questionIndex    Int      @map("question_index")
+  selectedChoiceId String?  @map("selected_choice_id") @db.VarChar(64)
+  isCorrect        Boolean  @map("is_correct")
+  responseTimeMs   Int      @map("response_time_ms")
+  pointsAwarded    Int      @default(0) @map("points_awarded")
+  answeredAt       DateTime @default(now()) @map("answered_at") @db.Timestamptz
+
+  room        LiveRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant LiveRoomParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  card        Card                @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, participantId, questionIndex])
+  @@index([roomId, questionIndex])
+  @@map("live_room_answers")
+}
+
+model PushSubscription {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  endpoint   String   @unique @db.Text
+  p256dh     String   @db.Text
+  auth       String   @db.Text
+  userAgent  String?  @map("user_agent") @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
