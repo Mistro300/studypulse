@@ -16,9 +16,9 @@ function readStoredMode(): ThemeMode {
       return saved;
     }
   } catch {
-    // Fallback to system
+    // Fallback to light
   }
-  return 'system';
+  return 'light';
 }
 
 function getSystemTheme(): ResolvedTheme {

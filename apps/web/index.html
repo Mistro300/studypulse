@@ -25,10 +25,10 @@
         try {
           var THEME_KEY = 'studypulse.theme';
           var LOCALE_KEY = 'studypulse.locale';
-          var LIGHT_BASE = '#FAF9F6';
+          var LIGHT_BASE = '#F7F6F2';
           var DARK_BASE = '#0D0C12';
 
-          var savedTheme = localStorage.getItem(THEME_KEY) || 'system';
+          var savedTheme = localStorage.getItem(THEME_KEY) || 'light';
           var prefersDark =
             window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
           var resolvedTheme =
