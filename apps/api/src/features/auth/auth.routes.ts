@@ -161,7 +161,7 @@ export function registerAuthRoutes(
       user = await repo.createUser({
         email: DEMO_USER_EMAIL,
         passwordHash,
-        displayName: 'Mohamed Bahaa',
+        displayName: 'Ahmed Mostafa',
         locale: 'ar',
       });
       user = await repo.updateUserOnboarding(user.id, {

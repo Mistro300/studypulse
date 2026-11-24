@@ -222,7 +222,7 @@ function createSeededDb(): StandaloneDb {
     id: demoUserId,
     email: 'demo@studypulse.app',
     password: 'StudyPulse123!',
-    displayName: 'Mohamed Bahaa',
+    displayName: 'Ahmed Mostafa',
     avatarUrl: null,
     streakDays: 3,
     preferences: {
@@ -338,7 +338,13 @@ export function loadStandaloneDb(): StandaloneDb {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw) as StandaloneDb;
+      const parsed = JSON.parse(raw) as StandaloneDb;
+      const demoUser = parsed.users?.find((u) => u.email === 'demo@studypulse.app');
+      if (demoUser && demoUser.displayName === 'Mohamed Bahaa') {
+        demoUser.displayName = 'Ahmed Mostafa';
+        saveStandaloneDb(parsed);
+      }
+      return parsed;
     }
   } catch {
     // Re-seed below

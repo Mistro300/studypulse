@@ -14,7 +14,7 @@ import { GlossySquircle } from '@/shared/ui/StudyPulseArtwork';
 
 const PLACEHOLDER_DIGITS = ['6', '5', '1', '2', '3', '6'];
 const DEMO_AVATARS = [
-  { initials: 'MB', bg: 'from-[#7C3AED] to-[#4F46E5]' },
+  { initials: 'AM', bg: 'from-[#7C3AED] to-[#4F46E5]' },
   { initials: 'SA', bg: 'from-[#0EA5E9] to-[#2563EB]' },
   { initials: 'NK', bg: 'from-[#F59E0B] to-[#EA580C]' },
   { initials: 'OM', bg: 'from-[#10B981] to-[#059669]' },

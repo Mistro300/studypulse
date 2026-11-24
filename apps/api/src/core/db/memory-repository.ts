@@ -68,7 +68,7 @@ export class MemoryRepository implements DataRepository {
     const demoUser = await this.createUser({
       email: DEMO_USER_EMAIL,
       passwordHash,
-      displayName: 'Mohamed Bahaa',
+      displayName: 'Ahmed Mostafa',
       locale: 'ar',
       theme: 'system',
     });
