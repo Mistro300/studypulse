@@ -191,9 +191,21 @@ const OPEN_TRIVIA_CATEGORIES = [
   { id: 9, name: 'General Knowledge' },
 ];
 
+function isValidHttpUrl(value: string | undefined): boolean {
+  if (!value) return false;
+  const trimmed = value.trim();
+  if (!/^https?:\/\/[a-z0-9.-]+/i.test(trimmed)) return false;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export function isStandaloneMode(): boolean {
   const configuredApi = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
-  if (configuredApi) return false;
+  if (isValidHttpUrl(configuredApi)) return false;
   if (typeof window === 'undefined') return false;
   const host = window.location.hostname;
   return host !== 'localhost' && host !== '127.0.0.1';
