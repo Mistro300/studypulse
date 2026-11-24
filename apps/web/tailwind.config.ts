@@ -41,9 +41,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        arabic: ['"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
-        heading: ['"Plus Jakarta Sans"', '"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
-        sans: ['"Inter"', '"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
+        arabic: ['"Alan Sans"', 'system-ui', 'sans-serif'],
+        heading: ['"Alan Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"Alan Sans"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       borderRadius: {
